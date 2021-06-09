@@ -155,7 +155,7 @@ class Board extends React.Component {
 
   computeSum(arr){
     // Compute twos complement
-    let sum = '0';
+    let sum = "0";
     let negative = arr[63];
     if(!negative){
       for(let i = 0; i < 63; i++){
@@ -170,10 +170,31 @@ class Board extends React.Component {
           sum = stringAdd(sum, values[i]);
         }
       }
-      sum = stringAdd(sum, '1');
+      sum = stringAdd(sum, "1");
       sum = '-' + sum;
     }
     return sum;
+  }
+
+  computeBinary(){
+    let res = "";
+    for(const i of this.state.click){
+      res += i ? "1" : "0";
+    }
+    return res;
+  }
+
+  computeHex(){
+    let res = "";
+    for(let i = 0; i < 63; i += 4){
+      let sum = 0;
+      sum += (this.state.click[i] - '0');
+      sum += (this.state.click[i + 1] - '0') * 2;
+      sum += (this.state.click[i + 2] - '0') * 4;
+      sum += (this.state.click[i + 3] - '0') * 8;
+      res += sum.toString(16)
+    }
+    return res.toUpperCase();
   }
 
   renderLabel(i){
@@ -220,7 +241,12 @@ class Board extends React.Component {
 
     let res = <div>
       <div className = 'board'>{buffer}</div>
-      <input type="number" style={{width:"250px"}} value={this.state.number} onChange={(e) => {this.handleChange(e);}}/>
+      <div>Binary</div>
+      <div>{this.computeBinary()}</div>
+      <div>Hexadecimal</div>
+      <div>{this.computeHex()}</div>
+      <div>Decimal</div>
+      <input type="number" style={{width:"500px"}} value={this.state.number} onChange={(e) => {this.handleChange(e);}}/>
       <div><button onClick = {() => this.clear()}>CLEAR</button></div>
     </div>
     return res;
