@@ -104,21 +104,146 @@ function Label(props){
   )
 }
 
+class Display extends React.Component {
+
+  computeBinary(){
+    let res = "";
+    for(const i of this.props.click){
+      res += i ? "1" : "0";
+    }
+    return res;
+  }
+  
+  computeHex(){
+    let res = "";
+    for(let i = 0; i < 63; i += 4){
+      let sum = 0;
+      sum += (this.props.click[i] - '0') * 8;
+      sum += (this.props.click[i + 1] - '0') * 4;
+      sum += (this.props.click[i + 2] - '0') * 2;
+      sum += (this.props.click[i + 3] - '0');
+      res += sum.toString(16)
+    }
+    return res.toUpperCase();
+  }
+
+  computeSum(){
+    // Compute twos complement
+    let sum = "0";
+    let negative = this.props.click[63];
+    if(!negative){
+      for(let i = 0; i < 63; i++){
+        if(this.props.click[i]){
+          sum = stringAdd(sum, values[i]);
+        }
+      }
+    }
+    else{
+      for(let i = 0; i < 63; i++){
+        if(!this.props.click[i]){
+          sum = stringAdd(sum, values[i]);
+        }
+      }
+      sum = stringAdd(sum, "1");
+      sum = '-' + sum;
+    }
+    return sum;
+  }
+
+  render(){
+    let input;
+    if(this.props.name === "Binary"){
+      if(this.props.type === "bin"){
+        input = <input type="text" style={{width:"500px"}} value={this.props.number} onChange={(e) => {this.props.change(e);}}/>
+      }
+      else{
+        input = <input type="text" style={{width:"500px"}} value={this.computeBinary()} onChange={(e) => {this.props.change(e);}}/>
+      }
+    }
+    else if(this.props.name === "Hexadecimal"){
+      if(this.props.type === "hex"){
+        input = <input type="text" style={{width:"500px"}} value={this.props.number} onChange={(e) => {this.props.change(e);}}/>
+      }
+      else{
+        input = <input type="text" style={{width:"500px"}} value={this.computeHex()} onChange={(e) => {this.props.change(e);}}/>
+      }
+    }
+    else if(this.props.name === "Decimal"){
+      if(this.props.type === "dec"){
+        input = <input type="text" style={{width:"500px"}} value={this.props.number} onChange={(e) => {this.props.change(e);}}/>
+      }
+      else{
+        input = <input type="text" style={{width:"500px"}} value={this.computeSum()} onChange={(e) => {this.props.change(e);}}/>
+      }
+    }
+    return (
+      <div>
+        <div>{this.props.name}</div>{input}
+      </div>
+    )
+  }
+
+
+}
+
 class Board extends React.Component {
 
   constructor(props){
     super(props);
     this.state = {
       click: Array(64).fill(false),
-      number: 0,
+      type: "",
+      number: "0",
     }
   }
 
   clear(){
     this.setState({
       click : Array(64).fill(false),
-      number : 0,
+      type : "",
     });
+  }
+
+  isHex(e){
+    let c = e.toUpperCase();
+    if((c >= "0" && c <= "9") || (c >= "A" && c <= "F")){
+      return true;
+    }
+    return false;
+  }
+
+  convertHex(e){
+    let val = parseInt(e, 16);
+    let res = "";
+    if(val >= 8){
+      val -= 8;
+      res += "1";
+    }
+    else{
+      res += "0";
+    }
+    if(val >= 4){
+      val -= 4;
+      res += "1";
+    }
+    else{
+      res += "0";
+    }
+    if(val >= 2){
+      val -= 2;
+      res += "1";
+    }
+    else{
+      res += "0";
+    }
+    if(val >= 1){
+      val -= 1;
+      res += "1";
+    }
+    else{
+      res += "0";
+    }
+    return res;
   }
 
   handleChange(event){
@@ -149,52 +274,76 @@ class Board extends React.Component {
     }
     this.setState({
       click : arr,
+      type : "dec",
       number : event.target.value,
     });
   }
 
-  computeSum(arr){
-    // Compute twos complement
-    let sum = "0";
-    let negative = arr[63];
-    if(!negative){
-      for(let i = 0; i < 63; i++){
-        if(arr[i]){
-          sum = stringAdd(sum, values[i]);
+  handleChangeBin(event){
+    let arr = Array(64).fill(false);
+    // validate
+    let val = event.target.value;
+    let validate = true;
+    if(val.length > 0 && val.length <= 64){
+      for(let i = 0; i < val.length; i++){
+        if(val[i] < "0" || val[i] > "1"){
+          validate = false;
+          break;
         }
       }
     }
     else{
-      for(let i = 0; i < 63; i++){
-        if(!arr[i]){
-          sum = stringAdd(sum, values[i]);
+      validate = false;
+    }
+    if(validate){
+      let counter = 0;
+      for(let i = val.length - 1; i >= 0; i--){
+        if(val[i] === "1"){
+          arr[63 - counter] = true;
+        }
+        counter++;
+      }
+    }
+    this.setState({
+      click : arr,
+      type : "bin",
+      number : val,
+    });
+  }
+
+  handleChangeHex(event){
+    let arr = Array(64).fill(false);
+    // validate
+    let val = event.target.value;
+    let validate = true;
+    if(val.length > 0 && val.length <= 16){
+      for(let i = 0; i < val.length; i++){
+        if(!this.isHex(val[i])){
+          validate = false;
+          break;
         }
       }
-      sum = stringAdd(sum, "1");
-      sum = '-' + sum;
     }
-    return sum;
-  }
-
-  computeBinary(){
-    let res = "";
-    for(const i of this.state.click){
-      res += i ? "1" : "0";
+    else{
+      validate = false;
     }
-    return res;
-  }
-
-  computeHex(){
-    let res = "";
-    for(let i = 0; i < 63; i += 4){
-      let sum = 0;
-      sum += (this.state.click[i] - '0');
-      sum += (this.state.click[i + 1] - '0') * 2;
-      sum += (this.state.click[i + 2] - '0') * 4;
-      sum += (this.state.click[i + 3] - '0') * 8;
-      res += sum.toString(16)
+    if(validate){
+      let counter = 0;
+      for(let i = val.length - 1; i >= 0; i--){
+        let bin = this.convertHex(val[i]);
+        for(let j = 0; j < bin.length; j++){
+          if(bin[j] === "1"){
+            arr[63 - counter - 3 + j] = true;
+          }
+        }
+        counter += 4;
+      }
     }
-    return res.toUpperCase();
+    this.setState({
+      click : arr,
+      type : "hex",
+      number : event.target.value,
+    });
   }
 
   renderLabel(i){
@@ -212,10 +361,9 @@ class Board extends React.Component {
     onClick = {() => {
       let newClick = this.state.click.slice();
       newClick[i] = !newClick[i];
-      let sum = this.computeSum(newClick);
       this.setState({
         click : newClick,
-        number : sum,
+        type : "",
       })
     }}
     />;
@@ -239,14 +387,12 @@ class Board extends React.Component {
     }
     buffer.push(<div className='board-row' key={8}>{alphaLabel}</div>)
 
-    let res = <div>
+    let res = 
+    <div>
       <div className = 'board'>{buffer}</div>
-      <div>Binary</div>
-      <div>{this.computeBinary()}</div>
-      <div>Hexadecimal</div>
-      <div>{this.computeHex()}</div>
-      <div>Decimal</div>
-      <input type="number" style={{width:"500px"}} value={this.state.number} onChange={(e) => {this.handleChange(e);}}/>
+      <Display name = "Binary" number = {this.state.number} click = {this.state.click} type = {this.state.type} change = {(e) => {this.handleChangeBin(e);}}/>
+      <Display name = "Hexadecimal" number = {this.state.number} click = {this.state.click} type = {this.state.type} change = {(e) => {this.handleChangeHex(e);}}/>
+      <Display name = "Decimal" number = {this.state.number} click = {this.state.click} type = {this.state.type} change = {(e) => {this.handleChange(e);}}/>
       <div><button onClick = {() => this.clear()}>CLEAR</button></div>
     </div>
     return res;
