@@ -249,28 +249,52 @@ class Board extends React.Component {
   handleChange(event){
     let arr = Array(64).fill(false);
     let val = event.target.value;
-    let negative = false;
-    if(val[0] === '-'){
-      negative = true;
-      arr[63] = true;
-      // Set up twos complement negative value
-      val = val.substring(1);
-      val = stringSubtract(val, "1");
+    // validate
+    let validate = true;
+    if(val.length === 0){
+      validate = false;
     }
-    for(let i = 62; i >= 0; i--){
-      // Only enter, if string is longer in length OR if equal in length and val is larger
-      if(val.length > values[i].length || ((val.length === values[i].length) && (val >= values[i]))){
-        val = stringSubtract(val, values[i]);
-        if(!negative){
+    else{
+      if((val[0] < "0" || val[0] > "9") && val[0] !== "-"){
+        validate = false;
+      }
+      else if(val[0] === "-" && val.length === 1){
+        validate = false;
+      }
+      else{
+        for(let i = 1; i < val.length; i++){
+          if(val[i] < "0" || val[i] > "9"){
+            validate = false;
+            break;
+          }
+        }
+      }
+    }
+    console.log(validate);
+    if(validate){
+      let negative = false;
+      if(val[0] === '-'){
+        negative = true;
+        arr[63] = true;
+        // Set up twos complement negative value
+        val = val.substring(1);
+        val = stringSubtract(val, "1");
+      }
+      for(let i = 62; i >= 0; i--){
+        // Only enter, if string is longer in length OR if equal in length and val is larger
+        if(val.length > values[i].length || ((val.length === values[i].length) && (val >= values[i]))){
+          val = stringSubtract(val, values[i]);
+          if(!negative){
+            arr[i] = true;
+          }
+        }
+        else if(negative){
           arr[i] = true;
         }
       }
-      else if(negative){
-        arr[i] = true;
+      if(val !== "0"){
+        arr = Array(64).fill(false);
       }
-    }
-    if(val !== "0"){
-      arr = Array(64).fill(false);
     }
     this.setState({
       click : arr,
